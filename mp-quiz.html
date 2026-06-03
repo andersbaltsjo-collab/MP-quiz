@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Miljöpartiet Quiz</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --green: #2d6a4f;
+    --lime: #74c69d;
+    --pale: #d8f3dc;
+    --earth: #1b4332;
+    --sand: #f4f1de;
+    --accent: #f77f00;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--sand);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* Organic background blobs */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -10%;
+    right: -15%;
+    width: 45vw;
+    height: 45vw;
+    background: radial-gradient(circle, #b7e4c720 0%, transparent 70%);
+    border-radius: 60% 40% 70% 30%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -10%;
+    left: -10%;
+    width: 40vw;
+    height: 40vw;
+    background: radial-gradient(circle, #74c69d18 0%, transparent 70%);
+    border-radius: 40% 60% 30% 70%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 680px; }
+
+  header { text-align: center; margin-bottom: 2.5rem; }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--green);
+    color: #fff;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .logo-badge span { font-size: 1rem; }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    color: var(--earth);
+    line-height: 1.1;
+  }
+  h1 em { color: var(--green); font-style: normal; }
+
+  .subtitle {
+    margin-top: 0.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  /* Progress bar */
+  .progress-bar-outer {
+    height: 6px;
+    background: #d4edda;
+    border-radius: 99px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+  .progress-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--lime), var(--green));
+    border-radius: 99px;
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* Question card */
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 24px rgba(45,106,79,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.35s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-meta {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--green);
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+  }
+
+  .q-text {
+    font-family: 'Fraunces', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--earth);
+    line-height: 1.35;
+    margin-bottom: 1.5rem;
+  }
+
+  /* 1x2 buttons */
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .opt-btn {
+    position: relative;
+    background: var(--pale);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 1rem 0.75rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--earth);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .opt-btn:hover:not(:disabled) {
+    background: #c7f0d8;
+    border-color: var(--lime);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(45,106,79,0.12);
+  }
+  .opt-btn:active:not(:disabled) { transform: translateY(0); }
+  .opt-btn:disabled { cursor: default; }
+
+  .opt-btn.correct {
+    background: #d1fae5;
+    border-color: #10b981;
+    color: #065f46;
+  }
+  .opt-btn.wrong {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #991b1b;
+  }
+  .opt-btn.reveal {
+    background: #d1fae5;
+    border-color: #10b981;
+    color: #065f46;
+    opacity: 0.75;
+  }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 1rem;
+    padding: 0.9rem 1rem;
+    background: #f0fdf4;
+    border-left: 3px solid var(--lime);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #374151;
+    line-height: 1.5;
+    animation: fadeUp 0.3s ease both;
+  }
+  .explanation strong { color: var(--green); }
+
+  /* Next btn */
+  .next-btn {
+    display: block;
+    margin: 1.5rem auto 0;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0.85rem 2.5rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .next-btn:hover {
+    background: var(--earth);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(27,67,50,0.2);
+  }
+
+  /* Result screen */
+  .result-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(45,106,79,0.1);
+    animation: fadeUp 0.4s ease both;
+  }
+  .result-emoji { font-size: 3.5rem; margin-bottom: 1rem; }
+  .result-score {
+    font-family: 'Fraunces', serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--earth);
+  }
+  .result-label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .result-comment {
+    font-size: 1rem;
+    color: var(--green);
+    font-weight: 500;
+    margin-bottom: 2rem;
+  }
+  .restart-btn {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0.85rem 2.5rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .restart-btn:hover { background: var(--earth); }
+
+  .score-mini {
+    display: inline-flex;
+    gap: 0.4rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+  }
+  .dot.ok  { background: #d1fae5; color: #065f46; }
+  .dot.bad { background: #fee2e2; color: #991b1b; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo-badge"><span>🌿</span> Quiz</div>
+    <h1>Miljöpartiet<br><em>— vad vet du?</em></h1>
+    <p class="subtitle">6 frågor · 1×2 · Lagom svårt</p>
+  </header>
+
+  <div class="progress-bar-outer">
+    <div class="progress-bar-inner" id="progress" style="width:0%"></div>
+  </div>
+
+  <div id="quiz-area"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Vilket år grundades Miljöpartiet de gröna i Sverige?",
+    opts: ["1981", "1988"],
+    correct: 0,
+    exp: "<strong>1981</strong> bildades Miljöpartiet på ett möte i Örebro — som det första gröna partiet i Norden att ta sig in i ett nationellt parlament."
+  },
+  {
+    q: "Vilken är Miljöpartiets valslogan och symbol?",
+    opts: ["Maskrosen", "Björklövet"],
+    correct: 0,
+    exp: "<strong>Maskrosen</strong> är Miljöpartiets symbol — en blomma som bryter sig igenom asfalt och representerar naturens motståndskraft mot det industriella samhället."
+  },
+  {
+    q: "Hur styrs Miljöpartiet formellt — vem är partiledare?",
+    opts: ["Två språkrör, en kvinna och en man", "En vald ordförande"],
+    correct: 0,
+    exp: "MP har sedan starten haft <strong>två språkrör</strong> — ett feministiskt grepp där en kvinna och en man leder partiet gemensamt och turas om att tala för partiet."
+  },
+  {
+    q: "Miljöpartiet ingick i en rödgrön regering 2014–2018. Vilket annat parti ledde den regeringen?",
+    opts: ["Socialdemokraterna", "Vänsterpartiet"],
+    correct: 0,
+    exp: "Regeringen Löfven I (2014–2016) och Löfven II (2016–2018) bestod av <strong>Socialdemokraterna och Miljöpartiet</strong>. Vänsterpartiet stödde utan att sitta i regeringen."
+  },
+  {
+    q: "Vilket av dessa är ett kärnområde i Miljöpartiets politik?",
+    opts: ["Avveckla fossila bränslen", "Sänka bolagsskatten"],
+    correct: 0,
+    exp: "<strong>Klimat och miljö</strong> är partiets hjärtefråga — de driver på för att Sverige ska ställa om från fossila bränslen till förnybar energi och hållbart jordbruk."
+  },
+  {
+    q: "I riksdagsvalet 2022 — tog sig Miljöpartiet över 4%-spärren?",
+    opts: ["Ja, de kom in i riksdagen", "Nej, de åkte ut"],
+    correct: 0,
+    exp: "I valet 2022 fick MP ca <strong>5,1 %</strong> och tog sig precis in i riksdagen — efter att ha missat spärren och åkt ut 2018 (då fick de 4,4 %)."
+  }
+];
+
+let current = 0;
+let score = 0;
+let results = [];
+let answered = false;
+
+function render() {
+  const area = document.getElementById('quiz-area');
+  const pct = (current / questions.length) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+
+  if (current >= questions.length) {
+    showResult(area);
+    return;
+  }
+
+  const q = questions[current];
+  answered = false;
+
+  area.innerHTML = `
+    <div class="card">
+      <div class="q-meta">Fråga ${current + 1} av ${questions.length}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">
+        ${q.opts.map((o, i) => `
+          <button class="opt-btn" onclick="choose(${i})" id="opt${i}">${o}</button>
+        `).join('')}
+      </div>
+      <div id="feedback"></div>
+    </div>
+  `;
+}
+
+function choose(idx) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const isCorrect = idx === q.correct;
+  if (isCorrect) score++;
+  results.push(isCorrect);
+
+  q.opts.forEach((_, i) => {
+    const btn = document.getElementById('opt' + i);
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add('reveal');
+    if (i === idx && !isCorrect) btn.classList.add('wrong');
+    if (i === idx && isCorrect) { btn.classList.remove('reveal'); btn.classList.add('correct'); }
+  });
+
+  document.getElementById('feedback').innerHTML = `
+    <div class="explanation">
+      ${isCorrect ? '✅ Rätt!' : '❌ Fel.'} ${q.exp}
+    </div>
+    <button class="next-btn" onclick="next()">${current + 1 < questions.length ? 'Nästa fråga →' : 'Se resultat →'}</button>
+  `;
+}
+
+function next() {
+  current++;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showResult(area) {
+  document.getElementById('progress').style.width = '100%';
+  const pct = Math.round((score / questions.length) * 100);
+  let emoji = '🌱', comment = 'Du har koll på grunderna!';
+  if (score === 6) { emoji = '🌿✨'; comment = 'Imponerande! Du kan nog bli språkrör.'; }
+  else if (score >= 4) { emoji = '🌿'; comment = 'Bra jobbat — du vet det viktigaste!'; }
+  else if (score <= 2) { emoji = '🌱'; comment = 'Lite mer läsning så sitter det — kämpa på!'; }
+
+  const dots = results.map((r, i) => `<div class="dot ${r ? 'ok' : 'bad'}">${i+1}</div>`).join('');
+
+  area.innerHTML = `
+    <div class="result-card">
+      <div class="result-emoji">${emoji}</div>
+      <div class="result-score">${score} / ${questions.length}</div>
+      <div class="result-label">rätta svar (${pct} %)</div>
+      <div class="result-comment">${comment}</div>
+      <div class="score-mini">${dots}</div>
+      <br>
+      <button class="restart-btn" onclick="restart()">Spela igen 🔄</button>
+    </div>
+  `;
+}
+
+function restart() {
+  current = 0; score = 0; results = [];
+  document.getElementById('progress').style.width = '0%';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
